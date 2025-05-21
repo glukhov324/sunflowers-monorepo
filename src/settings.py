@@ -9,5 +9,8 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
+    # Model
+    NMS_THRESHOLD: float = 0.5
+
 
 settings = Settings()
