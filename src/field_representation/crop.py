@@ -1,0 +1,51 @@
+import numpy as np
+from typing import List
+from src.field_representation.bounding_box import BoundingBox
+from src.segmentation import get_yolo_prediction
+from src.settings import settings
+
+
+
+class Crop:
+  """
+  Класс для представления фрагмента изображения
+
+  Attributes:
+    image (np.ndarray): изображение в виде массива numpy
+    borders (BoundingBox) - границы изображения в исходном фото
+    mask (np.ndarray): - карта растительности (маска) для фрагмента изображения
+  
+  Methods:
+    get_plants_bboxes_masks(image): Получение маски и bounding box-ов для фрагмента поля
+  """
+  def __init__(self,
+               image: np.ndarray,
+               borders: BoundingBox):
+    
+    self.image = image
+    self.borders = borders
+    self.mask = np.zeros((settings.WIN_SIZE, settings.WIN_SIZE))
+    self.bboxes_crop: List[BoundingBox] = []
+    self.bboxes_scaled: List[BoundingBox] = []
+  
+
+  def get_plants_bboxes_masks(self):
+    """
+    Получение маски и bounding box-ов для фрагмента поля
+    """
+    bboxes, masks = get_yolo_prediction(bgr_image=self.image)
+    if masks is not None:
+      for i, mask in enumerate(masks):
+        self.mask += mask.astype(np.uint8)
+        cur_box = bboxes[i]
+        self.bboxes_crop.append(BoundingBox(cur_box[0],
+                                          cur_box[1],
+                                          cur_box[2],
+                                          cur_box[3]))
+        
+        self.bboxes_scaled.append(BoundingBox(cur_box[0] + self.borders.yu,
+                                            cur_box[1] + self.borders.xu,
+                                            cur_box[2] + self.borders.yu,
+                                            cur_box[3] + self.borders.xu))
+                          
+      self.mask[self.mask != 0] = 1

@@ -14,5 +14,9 @@ class Settings(BaseSettings):
     MODEL_PATH: str
     NMS_THRESHOLD: float = 0.5
 
+    # image processing
+    WIN_SIZE: int
+    STRIDE: int
+
 
 settings = Settings()
