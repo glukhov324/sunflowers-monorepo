@@ -8,8 +8,10 @@ class Settings(BaseSettings):
     # Server
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    DEV_MODE: bool = False
 
     # Model
+    MODEL_PATH: str
     NMS_THRESHOLD: float = 0.5
 
 
