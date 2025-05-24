@@ -2,6 +2,8 @@ import numpy as np
 from typing import List
 from src.field_representation.bounding_box import BoundingBox
 from src.field_representation.crop import Crop
+from src.segmentation import cv2_nms
+from src.settings import settings
 
 
 
@@ -34,6 +36,7 @@ class Field:
         self.stride = stride
         self.crops: List[Crop] = []
         self.bboxes: List[BoundingBox] = []
+        self.confs = []
 
   
 
@@ -51,8 +54,7 @@ class Field:
             for y in range(0, self.image.shape[1], sy):
                 diff_x = x + dx - self.image.shape[0]
                 diff_y = y + dy - self.image.shape[1]
-                # по краям отступаем назад и считываем оставшиеся
-                # фрагменты изображения в ряде
+
                 if diff_x > 0:
                     x -= diff_x
                 if diff_y > 0:
@@ -67,17 +69,22 @@ class Field:
         """
         Получение карты растительности (маски) и bounding box'ов для всего поля 
         """
-
         for i in range(len(self.crops)):
             self.crops[i].get_plants_bboxes_masks()
             crop_mask = self.crops[i].mask.astype(np.uint8)
             mask_borders = self.crops[i].borders
             self.mask[mask_borders.xu:mask_borders.xd, mask_borders.yu: mask_borders.yd] += crop_mask
             self.bboxes.extend(self.crops[i].bboxes_scaled)
+            self.confs.extend(self.crops[i].confs)
 
         self.mask[self.mask != 0] = 1
+        self.confs = [item for sublist in self.confs for item in sublist]
+        self.bboxes, self.confs = cv2_nms(boxes=self.bboxes,
+                                          confs=self.confs,
+                                          confs_threshold=settings.CONFS_THRESHOLD,
+                                          nms_threshold=settings.NMS_THRESHOLD_BOXES)
+
     
-        
     def count_plants(self):
         """
         Подсчет количества единиц культурных растений на поле

@@ -19,3 +19,10 @@ class BoundingBox:
         self.yu = yu
         self.xd = xd
         self.yd = yd
+    
+    def tolist(self):
+        """
+        Преобразует объект класса bounding box в список [xu, yu, xd, yd]
+        """
+
+        return [self.xu, self.yu, self.xd, self.yd]

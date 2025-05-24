@@ -27,13 +27,14 @@ class Crop:
     self.mask = np.zeros((settings.WIN_SIZE, settings.WIN_SIZE))
     self.bboxes_crop: List[BoundingBox] = []
     self.bboxes_scaled: List[BoundingBox] = []
+    self.confs = []
   
 
   def get_plants_bboxes_masks(self):
     """
     Получение маски и bounding box-ов для фрагмента поля
     """
-    bboxes, masks = get_yolo_prediction(bgr_image=self.image)
+    bboxes, masks, conf = get_yolo_prediction(bgr_image=self.image)
     if masks is not None:
       for i, mask in enumerate(masks):
         self.mask += mask.astype(np.uint8)
@@ -47,5 +48,6 @@ class Crop:
                                             cur_box[1] + self.borders.xu,
                                             cur_box[2] + self.borders.yu,
                                             cur_box[3] + self.borders.xu))
+      self.confs.append(conf.tolist())
                           
       self.mask[self.mask != 0] = 1
