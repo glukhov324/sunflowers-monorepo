@@ -1,35 +1,33 @@
 import numpy as np
 from typing import List
-from src.field_representation.bounding_box import BoundingBox
-from src.field_representation.crop import Crop
+from src.field_representation import BoundingBox, Crop
 from src.segmentation import cv2_nms
+from src.coordinates import get_camera_coords, pixel2degree
 from src.settings import settings
 
 
 
 class Field:
     """
-    Класс для представления поля.
+    Класс для представления поля
 
     Attributes:
-        image (np.ndarray) : изображение в виде массива numpy
-        mask (np.ndarray) : карта растительности (маска) для поля
-        win_size (tuple[int, int]) : размер окна для разрезания поля на фрагменты
-        stride (tuple[int, int]) : шаг разреза поля на фрагменты
-        crops (List[Crop]) : список фрагментов изображения
-        bboxes (List[BoundingBox]) : список bounding box-ов объектов на всём поле
-    
-    Methods:
-        crop_image(): деление изображения на фрагменты
-        get_mask_boxes(): получение карты растительности (маски) и bounding box'ов для всего поля
-        count_plants(): подсчет количества единиц культурных растений на поле
+        pil_image (PIL.Image): изображение поля в формате PIL.Image
+        image (np.ndarray): изображение поля в виде массива numpy
+        mask (np.ndarray): карта растительности (маска) для поля
+        win_size (tuple[int, int]): размер окна для разрезания поля на фрагменты
+        stride (tuple[int, int]): шаг разреза поля на фрагменты
+        crops (List[Crop]): список фрагментов изображения
+        bboxes (List[BoundingBox]): список bounding box-ов объектов на всём поле
     """
 
-    def __init__(self, 
-                image: np.ndarray, 
-                win_size: tuple[int, int],
-                stride: tuple[int, int]):
+    def __init__(self,
+                 pil_image: str,
+                 image: np.ndarray, 
+                 win_size: tuple[int, int],
+                 stride: tuple[int, int]):
 
+        self.pil_image = pil_image
         self.image = image
         self.mask = np.zeros((image.shape[0], image.shape[1]))
         self.win_size = win_size
@@ -37,6 +35,7 @@ class Field:
         self.crops: List[Crop] = []
         self.bboxes: List[BoundingBox] = []
         self.confs = []
+        self.boxes_geo_coords = []
 
   
 
@@ -84,8 +83,31 @@ class Field:
                                           confs_threshold=settings.CONFS_THRESHOLD,
                                           nms_threshold=settings.NMS_THRESHOLD_BOXES)
 
-    
-    def count_plants(self):
+    def geo_boxes_coords(self):
+        """
+        Получение географических координат центров bounding box'ов объектов
+        """
+
+        camera_lat, camera_lon = get_camera_coords(pil_img=self.pil_image)
+        image_width_px = self.image.shape[1]
+        image_height_px = self.image.shape[0]
+
+        for box in self.bboxes:
+            x_center_object = (box.xd - box.xu) / 2
+            y_center_object = (box.yd - box.yu) / 2
+
+            offset_x_px = x_center_object - image_width_px / 2
+            offset_y_px = y_center_object - image_height_px / 2
+
+            obj_lat, obj_lon = pixel2degree(camera_lat=camera_lat, 
+                                            camera_lon=camera_lon, 
+                                            x_obj=offset_x_px, 
+                                            y_obj=offset_y_px)
+            
+            self.boxes_geo_coords.append([obj_lat, obj_lon])
+
+
+    def count_plants(self) -> int:
         """
         Подсчет количества единиц культурных растений на поле
         """

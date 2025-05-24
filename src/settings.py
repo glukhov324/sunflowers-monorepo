@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     CONFS_THRESHOLD: float
     NMS_THRESHOLD_BOXES: float
 
+    # Coordinates consts
+    METERS_PER_PIXEL: float
+    R_EARTH: int
+
 
 
 

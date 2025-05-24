@@ -1,3 +1,6 @@
+
+
+
 class BoundingBox:
     """
     Класс для представления bounding box'a.
@@ -10,10 +13,10 @@ class BoundingBox:
     """
     
     def __init__(self, 
-                xu = 0, 
-                yu = 0, 
-                xd = 0, 
-                yd = 0):
+                 xu: float = 0.0, 
+                 yu: float = 0.0, 
+                 xd: float = 0.0, 
+                 yd: float = 0.0):
         
         self.xu = xu
         self.yu = yu

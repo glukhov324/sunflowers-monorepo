@@ -1,7 +1,5 @@
 from fastapi import APIRouter, UploadFile
-import numpy as np
-import cv2
-from src.segmentation import get_yolo_prediction
+from src.field_representation.pipeline import field_processing
 
 
 
@@ -12,9 +10,6 @@ router = APIRouter(prefix="/predict")
 async def one_image_prediction(file: UploadFile):
 
     data = await file.read()
-    nparr = np.fromstring(data, np.uint8)
-    bgr_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-    prediciton = get_yolo_prediction(bgr_image=bgr_img)
+    image, bboxes, geo_coords = field_processing(data)
 
     return {"msg": "ok"}

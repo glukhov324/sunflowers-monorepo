@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List
-from src.field_representation.bounding_box import BoundingBox
+from src.field_representation import BoundingBox
 from src.segmentation import get_yolo_prediction
 from src.settings import settings
 
@@ -14,9 +14,7 @@ class Crop:
     image (np.ndarray): изображение в виде массива numpy
     borders (BoundingBox) - границы изображения в исходном фото
     mask (np.ndarray): - карта растительности (маска) для фрагмента изображения
-  
-  Methods:
-    get_plants_bboxes_masks(image): Получение маски и bounding box-ов для фрагмента поля
+
   """
   def __init__(self,
                image: np.ndarray,
