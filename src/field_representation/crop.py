@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List
-from src.field_representation import BoundingBox
+from src.schemas import BoundingBox
 from src.segmentation import get_yolo_prediction
 from src.settings import settings
 
@@ -37,15 +37,15 @@ class Crop:
       for i, mask in enumerate(masks):
         self.mask += mask.astype(np.uint8)
         cur_box = bboxes[i]
-        self.bboxes_crop.append(BoundingBox(cur_box[0],
-                                          cur_box[1],
-                                          cur_box[2],
-                                          cur_box[3]))
+        self.bboxes_crop.append(BoundingBox(xu=cur_box[0],
+                                            yu=cur_box[1],
+                                            xd=cur_box[2],
+                                            yd=cur_box[3]))
         
-        self.bboxes_scaled.append(BoundingBox(cur_box[0] + self.borders.yu,
-                                            cur_box[1] + self.borders.xu,
-                                            cur_box[2] + self.borders.yu,
-                                            cur_box[3] + self.borders.xu))
+        self.bboxes_scaled.append(BoundingBox(xu=cur_box[0] + self.borders.yu,
+                                              yu=cur_box[1] + self.borders.xu,
+                                              xd=cur_box[2] + self.borders.yu,
+                                              yd=cur_box[3] + self.borders.xu))
       self.confs.append(conf.tolist())
                           
       self.mask[self.mask != 0] = 1

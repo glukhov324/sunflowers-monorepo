@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from typing import List
-from src.field_representation.bounding_box import BoundingBox
+from src.schemas import BoundingBox
 
 
 
