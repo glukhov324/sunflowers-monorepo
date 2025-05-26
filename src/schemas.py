@@ -16,7 +16,10 @@ class GeoCoords(BaseModel):
     lat: float
     lon: float
 
+class SunflowerItem(BaseModel):
+    bbox: BoundingBox
+    geo_coords: GeoCoords
+
 class MLServiceResponse(BaseModel):
     img_base64: str
-    bboxes: List[BoundingBox]
-    geo_coords: List[GeoCoords]
+    sunflowers_data: List[SunflowerItem]

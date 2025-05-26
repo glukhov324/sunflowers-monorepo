@@ -5,7 +5,7 @@ import io
 import base64
 from loguru import logger
 from src.field_representation import Field
-from src.schemas import MLServiceResponse
+from src.schemas import MLServiceResponse, SunflowerItem
 from src.settings import settings
 
 
@@ -37,7 +37,7 @@ def field_processing(image_data: str) -> MLServiceResponse:
     logger.info("Get geo coordinates of sunflowers process was ended")
     base64_img = base64.b64encode(image_data)
     response = MLServiceResponse(img_base64=base64_img,
-                                 bboxes=field.bboxes,
-                                 geo_coords=field.boxes_geo_coords)
+                                 sunflowers_data=[SunflowerItem(bbox=box, 
+                                                                geo_coords=geo_coords) for box, geo_coords in zip(field.bboxes, field.boxes_geo_coords)])
     
     return response

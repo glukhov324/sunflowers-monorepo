@@ -104,9 +104,9 @@ class Field:
             offset_y_px = y_center_object - image_height_px / 2
 
             geo_coords = pixel2degree(camera_lat=camera_lat, 
-                                            camera_lon=camera_lon, 
-                                            x_obj=offset_x_px, 
-                                            y_obj=offset_y_px)
+                                      camera_lon=camera_lon, 
+                                      x_obj=offset_x_px, 
+                                      y_obj=offset_y_px)
             
             self.boxes_geo_coords.append(geo_coords)
 
