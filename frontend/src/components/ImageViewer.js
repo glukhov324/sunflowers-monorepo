@@ -84,11 +84,11 @@ const ImageViewer = ({ imageSrc, boxes }) => {
       }
 
       // Рисуем прямоугольник
-      ctx.strokeRect(xu, yu, width, height);
+      ctx.strokeRect(xu, yu, width, height)
 
       // Текст внутри
       ctx.fillStyle = 'lime';
-      ctx.fillText(`#${index + 1}`, xu + 5, yu + 15);
+      //ctx.fillText(`#${index + 1}`, xu + 5, yu + 15);
     });
   };
 
