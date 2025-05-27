@@ -5,10 +5,15 @@ const ImageViewer = ({ imageSrc, boxes }) => {
   const tooltipRef = useRef(null);
   const [scale, setScale] = useState(1);
 
+  // --- Отрисовка изображения и bounding box'ов ---
   useEffect(() => {
-    if (!imageSrc) return;
+    if (!imageSrc) {
+      console.warn('Изображение не загружено');
+      return;
+    }
 
     const img = new Image();
+    // Добавляем префикс, если его нет
     img.src = imageSrc.startsWith('data') ? imageSrc : `data:image/png;base64,${imageSrc}`;
 
     img.onload = () => {
@@ -35,7 +40,13 @@ const ImageViewer = ({ imageSrc, boxes }) => {
       canvas.width = width;
       canvas.height = height;
 
+      // Очистка холста
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Рисуем изображение
       ctx.drawImage(img, 0, 0, width, height);
+
+      // Рисуем боксы
       drawBoxes(ctx, boxes, scale);
     };
 
@@ -44,109 +55,101 @@ const ImageViewer = ({ imageSrc, boxes }) => {
     };
   }, [imageSrc, boxes, scale]);
 
+  // --- Функция рисования BBox ---
   const drawBoxes = (ctx, boxes, scale) => {
-    if (!boxes?.length) return;
+    if (!boxes?.length) {
+      console.warn('Bounding box\'ов нет');
+      return;
+    }
 
     ctx.strokeStyle = 'lime';
     ctx.lineWidth = 2;
     ctx.font = '14px Arial';
 
-    // Очистка предыдущих данных
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.drawImage(new Image(), 0, 0); // перерисовка фона не требуется, если картинка уже загружена
-
     boxes.forEach((item, index) => {
       const { bbox, geo_coords } = item;
 
-      const xu = Math.max(0, Number(bbox.xu) * scale);
-      const yu = Math.max(0, Number(bbox.yu) * scale);
-      const xd = Math.min(canvasRef.current.width, Number(bbox.xd) * scale);
-      const yd = Math.min(canvasRef.current.height, Number(bbox.yd) * scale);
+      const xu = Number(bbox.xu) * scale;
+      const yu = Number(bbox.yu) * scale;
+      const xd = Number(bbox.xd) * scale;
+      const yd = Number(bbox.yd) * scale;
 
-      // Проверяем, чтобы bounding box оставался на холсте
-      if (xu < 0 || yu < 0 || xd > canvasRef.current.width || yd > canvasRef.current.height) {
-        console.warn(`Bounding box ${index} выходит за пределы холста:`, bbox);
+      const width = xd - xu;
+      const height = yd - yu;
+
+      // Проверяем корректность координат
+      if (!isFinite(xu) || !isFinite(yu) || width <= 0 || height <= 0) {
+        console.warn(`Некорректные координаты BBox:`, bbox);
         return;
       }
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(xu, yu, xd - xu, yd - yu);
-      ctx.stroke();
+      // Рисуем прямоугольник
+      ctx.strokeRect(xu, yu, width, height);
+
+      // Текст внутри
       ctx.fillStyle = 'lime';
-      ctx.fillText(`#${index + 1}`, xu + 5, yu + 15); // Текст внутри bounding box
-      ctx.restore();
-
-      // Сохраняем данные в dataset
-      ctx.putImageData(
-        createBoxImageData(xu, yu, xd - xu, yd - yu, geo_coords),
-        Math.floor(xu),
-        Math.floor(yu)
-      );
+      ctx.fillText(`#${index + 1}`, xu + 5, yu + 15);
     });
-
-    setupCanvasEvents(ctx, boxes, scale);
   };
 
-  const createBoxImageData = (index, x, y, w, h, geo_coords) => {
+  // --- Обработка событий мыши для tooltip'а ---
+  const handleMouseMove = (e) => {
     const canvas = canvasRef.current;
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = canvas.width;
-    offCanvas.height = canvas.height;
-    const ctx = offCanvas.getContext('2d');
-    ctx.fillStyle = `rgba(0, 255, 0, ${index + 1})`;
-    ctx.fillRect(x, y, w, h);
-    ctx.fillStyle = 'white';
-    ctx.fillText(`#${index + 1}`, x + 5, y - 5);
-    return ctx.getImageData(0, 0, offCanvas.width, offCanvas.height);
-  };
+    if (!canvas || !boxes.length) return;
 
-  const setupCanvasEvents = (ctx, boxes, scale) => {
-    const canvas = canvasRef.current;
-    const tooltip = tooltipRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    const showTooltip = (lat, lon, x, y) => {
-      if (!tooltip) return;
-      tooltip.style.display = 'block';
-      tooltip.style.left = `${x + 10}px`;
-      tooltip.style.top = `${y + 10}px`;
-      tooltip.innerHTML = `<strong>Широта:</strong> ${lat.toFixed(6)}<br/><strong>Долгота:</strong> ${lon.toFixed(6)}`;
-    };
+    for (let i = 0; i < boxes.length; i++) {
+      const { bbox } = boxes[i];
+      const xu = Number(bbox.xu) * scale;
+      const yu = Number(bbox.yu) * scale;
+      const xd = Number(bbox.xd) * scale;
+      const yd = Number(bbox.yd) * scale;
 
-    const hideTooltip = () => {
-      if (tooltip) tooltip.style.display = 'none';
-    };
+      const width = xd - xu;
+      const height = yd - yu;
 
-    canvas.onmousemove = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      for (let i = 0; i < boxes.length; i++) {
-        const { bbox } = boxes[i];
-        const xu = Math.max(0, Number(bbox.xu) * scale);
-        const yu = Math.max(0, Number(bbox.yu) * scale);
-        const xd = Math.min(canvasRef.current.width, Number(bbox.xd) * scale);
-        const yd = Math.min(canvasRef.current.height, Number(bbox.yd) * scale);
-
-        if (x >= xu && x <= xd && y >= yu && y <= yd) {
-          const { lat, lon } = boxes[i].geo_coords;
-          showTooltip(lat, lon, x, y);
-          return;
-        }
+      if (
+        x >= xu &&
+        x <= xu + width &&
+        y >= yu &&
+        y <= yu + height
+      ) {
+        const { lat, lon } = boxes[i].geo_coords;
+        showTooltip(lat, lon, x, y);
+        return;
       }
+    }
 
-      hideTooltip();
-    };
+    hideTooltip();
+  };
 
-    canvas.onmouseleave = () => {
-      hideTooltip();
-    };
+  const showTooltip = (lat, lon, x, y) => {
+    const tooltip = tooltipRef.current;
+    if (!tooltip) return;
+
+    tooltip.style.display = 'block';
+    tooltip.style.left = `${x + 10}px`;
+    tooltip.style.top = `${y + 10}px`;
+    tooltip.innerHTML = `<strong>Широта:</strong> ${lat.toFixed(15)}<br/><strong>Долгота:</strong> ${lon.toFixed(15)}`;
+  };
+
+  const hideTooltip = () => {
+    const tooltip = tooltipRef.current;
+    if (!tooltip) return;
+    tooltip.style.display = 'none';
   };
 
   return (
     <div style={{ position: 'relative', marginTop: '20px' }}>
-      <canvas ref={canvasRef} style={{ border: '1px solid #ccc' }} />
+      <canvas
+        ref={canvasRef}
+        style={{ border: '1px solid #ccc' }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={hideTooltip}
+      />
       <div
         ref={tooltipRef}
         style={{
