@@ -136,11 +136,3 @@ class Field:
                                       y_obj=offset_y_px)
             
             self.boxes_geo_coords.append(geo_coords)
-
-
-    def count_plants(self) -> int:
-        """
-        Подсчет количества единиц культурных растений на поле
-        """
-
-        return len(self.scaled_bboxes)
