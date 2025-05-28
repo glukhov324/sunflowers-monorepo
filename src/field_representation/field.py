@@ -1,7 +1,8 @@
 import PIL
 import PIL.Image
 import numpy as np
-from typing import List
+from typing import List, Dict
+from src.segmentation.prediction import get_yolo_prediction
 from src.field_representation import Crop
 from src.schemas import BoundingBox, GeoCoords
 from src.segmentation import cv2_nms
@@ -36,9 +37,9 @@ class Field:
         self.win_size: tuple[int, int] = win_size
         self.stride: tuple[int, int] = stride
         self.crops: List[Crop] = []
-        self.bboxes: List[BoundingBox] = []
         self.confs: List[float] = []
         self.boxes_geo_coords: List[GeoCoords] = []
+        self.scaled_bboxes = []
 
   
 
@@ -66,26 +67,52 @@ class Field:
                     Crop(image=self.image_array[x : x + dx, y : y + dy],
                          borders=BoundingBox(xu=x, yu=y, xd=x+dx, yd=y+dy))        
                 )
+                
 
     def get_mask_boxes(self):
         """
         Получение карты растительности (маски) и bounding box'ов для всего поля 
         """
+        start = 0
+        confs, crops_bboxes, crops_masks = {}, {}, {}
+        for i in range(0, len(self.crops), settings.BATCH_SIZE):
+            crops_list = [elem.image for elem in self.crops[start:start + settings.BATCH_SIZE]]
+            pred_result = get_yolo_prediction(bgr_images=crops_list)
+            start += settings.BATCH_SIZE
 
+            
+            for i, r in enumerate(pred_result):
+                boxes = r.boxes
+                if r.masks:
+                    crops_bboxes[len(crops_bboxes)] = boxes.xyxy.cpu()
+                    confs[len(confs)] = boxes.conf.cpu()
+                    crops_masks[len(crops_masks)] = r.masks.data.cpu()
+                else:
+                    crops_bboxes[len(crops_bboxes)] = []
+                    confs[len(confs)] = []
+                    crops_masks[len(crops_masks)] = []
+
+                    
         for i in range(len(self.crops)):
-            self.crops[i].get_plants_bboxes_masks()
+            current_crop_masks = crops_masks[i]
+            self.crops[i].apply_mask(masks=current_crop_masks)
+
             crop_mask = self.crops[i].mask.astype(np.uint8)
             mask_borders = self.crops[i].borders
             self.mask[int(mask_borders.xu):int(mask_borders.xd), int(mask_borders.yu):int(mask_borders.yd)] += crop_mask
-            self.bboxes.extend(self.crops[i].bboxes_scaled)
-            self.confs.extend(self.crops[i].confs)
 
-        self.mask[self.mask != 0] = 1
-        self.confs = [item for sublist in self.confs for item in sublist]
-        self.bboxes, self.confs = cv2_nms(boxes=self.bboxes,
-                                          confs=self.confs,
-                                          confs_threshold=settings.CONFS_THRESHOLD,
-                                          nms_threshold=settings.NMS_THRESHOLD_BOXES)
+            self.scaled_bboxes.extend([
+                    BoundingBox(xu=box[0] + self.crops[i].borders.yu,
+                                yu=box[1] + self.crops[i].borders.xu,
+                                xd=box[2] + self.crops[i].borders.yu,
+                                yd=box[3] + self.crops[i].borders.xu)  for box in crops_bboxes[i] if box != []
+                ])
+                                                                            
+        self.scaled_bboxes, self.confs = cv2_nms(boxes=self.scaled_bboxes,
+                                                confs=confs,
+                                                confs_threshold=settings.CONFS_THRESHOLD,
+                                                nms_threshold=settings.NMS_THRESHOLD_BOXES)
+        del confs, crops_bboxes, crops_masks
 
     def geo_boxes_coords(self):
         """
@@ -96,7 +123,7 @@ class Field:
         image_width_px = self.image_array.shape[1]
         image_height_px = self.image_array.shape[0]
 
-        for box in self.bboxes:
+        for box in self.scaled_bboxes:
             x_center_object = (box.xd - box.xu) / 2
             y_center_object = (box.yd - box.yu) / 2
 
@@ -116,4 +143,4 @@ class Field:
         Подсчет количества единиц культурных растений на поле
         """
 
-        return len(self.bboxes)
+        return len(self.scaled_bboxes)

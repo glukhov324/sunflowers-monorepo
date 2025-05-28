@@ -12,11 +12,11 @@ class Settings(BaseSettings):
 
     # Model
     MODEL_PATH: str
-    NMS_THRESHOLD_MODEL: float = 0.5
 
     # Image processing
     WIN_SIZE: int
     STRIDE: int
+    BATCH_SIZE: int
 
     # Postprocessing 
     CONFS_THRESHOLD: float

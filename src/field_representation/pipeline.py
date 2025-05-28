@@ -38,6 +38,7 @@ def field_processing(image_data: str) -> MLServiceResponse:
     base64_img = base64.b64encode(image_data)
     response = MLServiceResponse(img_base64=base64_img,
                                  sunflowers_data=[SunflowerItem(bbox=box, 
-                                                                geo_coords=geo_coords) for box, geo_coords in zip(field.bboxes, field.boxes_geo_coords)])
+                                                                geo_coords=geo_coords) for box, geo_coords in zip(field.scaled_bboxes, 
+                                                                                                                  field.boxes_geo_coords)])
     
     return response
