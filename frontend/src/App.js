@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Uploader from './components/Uploader';
 import ImageViewer from './components/ImageViewer';
+import DownloadCSVButton from './components/DownloadCSVButton';
 
 function App() {
   const [result, setResult] = useState(null);
@@ -15,10 +16,13 @@ function App() {
       <Uploader onImageProcessed={handleProcess} />
 
       {result && (
-        <ImageViewer
-          imageSrc={`data:image/png;base64,${result.img_base64}`}
-          boxes={result.sunflowers_data}
-        />
+        <>
+          <ImageViewer
+            imageSrc={`data:image/png;base64,${result.img_base64}`}
+            boxes={result.sunflowers_data}
+          />
+          <DownloadCSVButton sunflowersData={result.sunflowers_data} />
+        </>
       )}
     </div>
   );
