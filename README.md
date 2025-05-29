@@ -1,5 +1,9 @@
 ## Проект по построению карт растительности полей подсолнухов
 
-## Пайплайн решения ![pipeline](preview/pipeline.PNG)
+## Пайплайн решения 
 
-## Демонстрация работы ![demo](preview/demo.gif)
+![pipeline](preview/pipeline.PNG)
+
+## Демонстрация работы 
+
+![demo](preview/demo.gif)
