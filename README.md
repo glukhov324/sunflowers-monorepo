@@ -1,1 +1,5 @@
-# sunflowers-monorepo
+## Проект по построению карт растительности полей подсолнухов
+
+## Пайплайн решения ![pipeline](preview/pipeline.png)
+
+## Демонстрация работы ![demo](preview/demo.gif)
