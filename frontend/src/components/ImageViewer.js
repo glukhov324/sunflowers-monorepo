@@ -133,7 +133,10 @@ const ImageViewer = ({ imageSrc, boxes }) => {
     tooltip.style.display = 'block';
     tooltip.style.left = `${x + 10}px`;
     tooltip.style.top = `${y + 10}px`;
-    tooltip.innerHTML = `<strong>Широта:</strong> ${lat.toFixed(15)}<br/><strong>Долгота:</strong> ${lon.toFixed(15)}`;
+
+    const latStr = lat !== null && lat !== undefined ? Number(lat).toFixed(15) : '-';
+    const lonStr = lon !== null && lon !== undefined ? Number(lon).toFixed(15) : '-';
+    tooltip.innerHTML = `<strong>Широта:</strong> ${latStr}<br/><strong>Долгота:</strong> ${lonStr}`;
   };
 
   const hideTooltip = () => {

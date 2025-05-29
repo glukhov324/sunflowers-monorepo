@@ -13,8 +13,8 @@ class BoundingBox(BaseModel):
         return [self.xu, self.yu, self.xd, self.yd]
 
 class GeoCoords(BaseModel):
-    lat: float
-    lon: float
+    lat: float | None
+    lon: float | None
 
 class SunflowerItem(BaseModel):
     bbox: BoundingBox

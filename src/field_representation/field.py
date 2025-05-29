@@ -119,20 +119,26 @@ class Field:
         Получение географических координат центров bounding box'ов объектов
         """
 
-        camera_lat, camera_lon = get_camera_coords(pil_img=self.pil_image)
-        image_width_px = self.image_array.shape[1]
-        image_height_px = self.image_array.shape[0]
+        coords = get_camera_coords(pil_img=self.pil_image)
+        if coords:
+            camera_lat, camera_lon = coords
+            image_width_px = self.image_array.shape[1]
+            image_height_px = self.image_array.shape[0]
 
-        for box in self.scaled_bboxes:
-            x_center_object = (box.xd - box.xu) / 2
-            y_center_object = (box.yd - box.yu) / 2
+            for box in self.scaled_bboxes:
+                x_center_object = (box.xd - box.xu) / 2
+                y_center_object = (box.yd - box.yu) / 2
 
-            offset_x_px = x_center_object - image_width_px / 2
-            offset_y_px = y_center_object - image_height_px / 2
+                offset_x_px = x_center_object - image_width_px / 2
+                offset_y_px = y_center_object - image_height_px / 2
 
-            geo_coords = pixel2degree(camera_lat=camera_lat, 
-                                      camera_lon=camera_lon, 
-                                      x_obj=offset_x_px, 
-                                      y_obj=offset_y_px)
+                geo_coords = pixel2degree(camera_lat=camera_lat, 
+                                          camera_lon=camera_lon, 
+                                          x_obj=offset_x_px, 
+                                          y_obj=offset_y_px)
+                
+                self.boxes_geo_coords.append(geo_coords)
             
-            self.boxes_geo_coords.append(geo_coords)
+        else:
+            self.boxes_geo_coords = [GeoCoords(lat=None, lon=None) for _ in range(len(self.scaled_bboxes))]
+        

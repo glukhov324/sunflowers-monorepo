@@ -2,27 +2,29 @@ import React from 'react';
 
 const DownloadCSVButton = ({ sunflowersData }) => {
   const handleDownload = () => {
-    if (!sunflowersData || !sunflowersData.length) {
+    if (!sunflowersData || !Array.isArray(sunflowersData) || sunflowersData.length === 0) {
       alert('Нет данных для экспорта');
       return;
     }
 
-    // Формируем CSV
     const csvRows = [];
 
-    // Заголовок
-    csvRows.push(['ID', 'lat', 'lon'].join(','));
+    // Заголовок CSV
+    csvRows.push(['ID', 'lot', 'lan'].join(','));
 
-    // Данные
+    // Формируем строки
     sunflowersData.forEach((item, index) => {
-      const { lat, lon } = item.geo_coords;
-      csvRows.push([index + 1, lat.toFixed(15), lon.toFixed(15)].join(','));
+      const lat = item.geo_coords?.lat ?? null;
+      const lon = item.geo_coords?.lon ?? null;
+
+      const latStr = lat !== null && !isNaN(lat) ? Number(lat).toFixed(15) : '-';
+      const lonStr = lon !== null && !isNaN(lon) ? Number(lon).toFixed(15) : '-';
+
+      csvRows.push([index + 1, latStr, lonStr].join(','));
     });
 
-    // Объединяем всё в строку
     const csvString = csvRows.join('\n');
 
-    // Создаём Blob и ссылку для скачивания
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
