@@ -7,3 +7,14 @@
 ## Демонстрация работы 
 
 ![demo](preview/demo.gif)
+
+## Запуск проекта
+
+```sh
+
+# build
+docker compose up --build
+
+# run
+docker compose up
+```
