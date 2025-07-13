@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import config from '../config';
 
 const Uploader = ({ onImageProcessed }) => {
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ const Uploader = ({ onImageProcessed }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post(process.env.PREDICT_API_URL, formData, {
+      const response = await axios.post(process.env.REACT_APP_PREDICT_API_URL, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
