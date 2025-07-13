@@ -17,7 +17,7 @@ const Uploader = ({ onImageProcessed }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/predict/one_image', formData, {
+      const response = await axios.post(process.env.PREDICT_API_URL, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
